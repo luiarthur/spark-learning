@@ -187,10 +187,11 @@ class StackOverflow extends Serializable {
     // TODO: Fill in the newMeans array
     // DONE
     lazy val closest = vectors.map( v => (findClosest(v,means),v) )
-    lazy val updatedMeans = closest.groupByKey
-                                   .mapValues(averageVectors)
-                                   .collect
-                                   .toMap
+    val updatedMeans = closest.groupByKey
+                              .mapValues(averageVectors)
+                              .collect
+                              .toMap
+
     for (i <- updatedMeans.keys) {
       newMeans(i) = updatedMeans(i)
     }
@@ -290,7 +291,7 @@ class StackOverflow extends Serializable {
   //
   def clusterResults(means: Array[(Int, Int)], vectors: RDD[(Int, Int)]): Array[(String, Double, Int, Int)] = {
     val closest = vectors.map(p => (findClosest(p, means), p))
-    val closestGrouped = closest.groupByKey()
+    val closestGrouped = closest.groupByKey
 
     val median = closestGrouped.mapValues { vs =>
       // most common language in the cluster
@@ -304,13 +305,8 @@ class StackOverflow extends Serializable {
 
       val medianScore: Int    = {
         lazy val x = vs.map(_._2).toVector.sorted
-        val n = x.length
-        val mid = n / 2
-        if (n % 2 != 0) {
-          x(mid)
-        } else {
-          (x(mid-1) + x(mid)) / 2
-        }
+        val mid = clusterSize / 2
+        if (clusterSize % 2 == 0) (x(mid-1) + x(mid)) / 2 else x(mid)
       }
 
       (langLabel, langPercent, clusterSize, medianScore)
